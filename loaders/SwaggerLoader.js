@@ -9,8 +9,21 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "API documentation for School Management",
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: ["./index.js"],
+  apis: ["./index.js", "./managers/**/*.manager.js"],
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
