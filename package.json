@@ -10,6 +10,8 @@
     "@eslint/js": "^10.0.1",
     "express": "^4.18.2",
     "globals": "^17.3.0",
+    "mongoose": "^9.2.1",
+    "redis": "^5.10.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
