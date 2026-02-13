@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../managers/user/User.model.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET || "jwt_secret_key";
 
 export default function authMiddleware() {
   return async function __auth(data) {
