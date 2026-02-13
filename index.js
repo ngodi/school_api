@@ -1,3 +1,76 @@
+/**
+ * @openapi
+ * /api/v1/admin/users:
+ *   post:
+ *     tags:
+ *       - Admin
+ *     summary: Create a user (school_admin) by superadmin or schooladmin
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [school_admin]
+ *               schoolId:
+ *                 type: string
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User created
+ *       400:
+ *         description: Validation error
+ *       403:
+ *         description: Forbidden
+ *
+ * /api/v1/auth/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: User login
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid credentials
+ *
+ * /api/v1/auth/logout:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: User logout
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
 import express from "express";
 import HealthManager from "./managers/health/Health.manager.js";
 import { swaggerUi, swaggerSpec } from "./loaders/SwaggerLoader.js";
@@ -19,6 +92,25 @@ async function bootstrap() {
   const managers = managersLoader.load();
 
   // Admin-only School routes
+  // User management endpoint (single route)
+  app.post("/api/v1/admin/users", (req, res) =>
+    managers.api.mw(
+      { ...req, params: { moduleName: "user", fnName: "createUser" } },
+      res,
+    ),
+  );
+  app.post("/api/v1/auth/login", (req, res) =>
+    managers.api.mw(
+      { ...req, params: { moduleName: "user", fnName: "login" } },
+      res,
+    ),
+  );
+  app.post("/api/v1/auth/logout", (req, res) =>
+    managers.api.mw(
+      { ...req, params: { moduleName: "user", fnName: "logout" } },
+      res,
+    ),
+  );
   app.post("/api/v1/admin/schools", (req, res) =>
     managers.api.mw(
       { ...req, params: { moduleName: "school", fnName: "create" } },

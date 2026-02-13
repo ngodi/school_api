@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import ApiHandler from "../managers/api/Api.manager.js";
 import SchoolManager from "../managers/school/School.manager.js";
+import UserManager from "../managers/user/User.manager.js";
 import { fileURLToPath } from "url";
 
 export default class ManagersLoader {
@@ -14,6 +15,7 @@ export default class ManagersLoader {
   load() {
     // Register managers
     this.managers.school = new SchoolManager();
+    this.managers.user = UserManager;
     // Add more managers as needed
     // ...
     // API handler
