@@ -1,3 +1,5 @@
+import express from "express";
+
 function getParamNames(fn) {
   const fnStr = fn.toString().replace(/\/\//g, " ");
   const args = fnStr.match(/^[\s\S]*?\(([^)]*)\)/);
@@ -63,7 +65,7 @@ export default class ApiHandler {
     try {
       return await targetModule[fnName](data);
     } catch (err) {
-      return { error: `${fnName} failed: ${err.message}` };
+      return { message: `${fnName} failed: ${err.message}` };
     }
   }
 
@@ -75,31 +77,39 @@ export default class ApiHandler {
     if (!moduleMatrix) {
       return res
         .status(404)
-        .json({ ok: false, message: `Module ${moduleName} not found` });
+        .json({ success: false, message: `Module ${moduleName} not found` });
     }
     if (!moduleMatrix[method]) {
       return res
         .status(405)
-        .json({ ok: false, message: `Unsupported method ${method}` });
+        .json({ success: false, message: `Unsupported method ${method}` });
     }
     if (!moduleMatrix[method].includes(fnName)) {
       return res.status(404).json({
-        ok: false,
+        success: false,
         message: `Function ${fnName} not found in module ${moduleName}`,
       });
     }
     const mwStack = this.mwsStack[`${moduleName}.${fnName}`] || [];
-    let data = { ...req.body };
+    let data = {
+      ...req.body,
+      ...req.query,
+      token: req.headers.authorization?.replace("Bearer ", ""),
+    };
+
     for (const mwName of mwStack) {
       const mw = this.mwsRepo[mwName];
       const result = await mw(data);
-      if (!result.ok) {
-        return res.status(403).json({ ok: false, message: result.error });
+      if (!result.success) {
+        return res
+          .status(401)
+          .json({ success: false, message: result.message });
       }
       data = result.data;
     }
     const targetModule = this.managers[moduleName];
     const result = await this._exec({ targetModule, fnName, data });
-    res.json(result);
+    console.log(result);
+    this.managers.responseDispatcher.dispatch(res, result);
   }
 }

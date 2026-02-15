@@ -47,10 +47,27 @@ class ClassroomManager {
     return { ok: true, data: classroom };
   }
 
-  async list(__auth, __rbac, { schoolId }) {
+  async list(__auth, __rbac, { schoolId, page = 1, limit = 10 }) {
     const query = schoolId ? { schoolId } : {};
-    const classrooms = await Classroom.find(query);
-    return { ok: true, data: classrooms };
+    page = Math.max(1, parseInt(page));
+    limit = Math.max(1, Math.min(100, parseInt(limit)));
+    const skip = (page - 1) * limit;
+    const [classrooms, total] = await Promise.all([
+      Classroom.find(query).skip(skip).limit(limit),
+      Classroom.countDocuments(query),
+    ]);
+    return {
+      ok: true,
+      data: {
+        classrooms,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    };
   }
 }
 

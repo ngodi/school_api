@@ -1,6 +1,7 @@
 import { createClient } from "redis";
+import config from "../config.js";
 
-const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+const REDIS_URL = config.REDIS_URL;
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 2000; // ms
 

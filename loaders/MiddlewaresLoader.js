@@ -16,7 +16,9 @@ export default class MiddlewaresLoader {
     const files = fs.readdirSync(mwsDir).filter((f) => f.endsWith(".mw.js"));
     for (const f of files) {
       const key = f.split(".").shift();
+
       const module = await import(path.join(mwsDir, f));
+
       const builder = module.default;
       this.mws[key] = builder(this.injectable);
     }

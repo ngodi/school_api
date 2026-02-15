@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const schoolSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   address: { type: String, required: true },
   contactEmail: { type: String, required: true },
   phone: { type: String, required: true },

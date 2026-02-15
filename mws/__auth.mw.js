@@ -1,24 +1,23 @@
 import jwt from "jsonwebtoken";
-import User from "../managers/user/User.model.js";
-
-const JWT_SECRET = process.env.JWT_SECRET || "jwt_secret_key";
+import User from "../managers/users/User.model.js";
+import config from "../config.js";
 
 export default function authMiddleware() {
   return async function __auth(data) {
     const token = data.token;
     if (!token) {
-      return { ok: false, error: "No token provided" };
+      return { success: false, message: "No token provided" };
     }
     try {
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, config.JWT_SECRET);
       const user = await User.findById(decoded.id);
       if (!user || !user.isActive) {
-        return { ok: false, error: "Invalid or inactive user" };
+        return { success: false, message: "Invalid or inactive user" };
       }
       data.user = user;
-      return { ok: true, data };
+      return { success: true, data };
     } catch (err) {
-      return { ok: false, error: "Invalid token" };
+      return { success: false, message: "Invalid token" };
     }
   };
 }

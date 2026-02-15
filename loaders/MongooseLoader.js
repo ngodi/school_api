@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
+import config from "../config.js";
 
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://localhost:27017/school_management";
+const MONGO_URI = config.MONGO_URI;
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 2000; // ms
 
