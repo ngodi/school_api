@@ -5,18 +5,22 @@ import config from "../config.js";
 
 const SUPERADMIN_EMAIL = config.SUPERADMIN_EMAIL;
 const SUPERADMIN_PASSWORD = config.SUPERADMIN_PASSWORD;
+const SUPERADMIN_FIRST_NAME = config.SUPERADMIN_FIRST_NAME;
+const SUPERADMIN_LAST_NAME = config.SUPERADMIN_LAST_NAME;
 
 async function seedSuperadmin() {
   await connectWithRetry();
 
   const existing = await User.findOne({ role: "superadmin" });
 
-  const passwordHash = bcrypt.hash(SUPERADMIN_PASSWORD, 10);
+  const passwordHash = await bcrypt.hash(SUPERADMIN_PASSWORD, 10);
 
   if (existing) {
     // Update existing superadmin with default password and ensure active
     existing.email = SUPERADMIN_EMAIL; // optional: reset email
     existing.passwordHash = passwordHash;
+    existing.firstName = SUPERADMIN_FIRST_NAME;
+    existing.lastName = SUPERADMIN_LAST_NAME;
     existing.isActive = true;
     await existing.save();
     console.log("Superadmin updated with default password:", SUPERADMIN_EMAIL);
@@ -24,9 +28,11 @@ async function seedSuperadmin() {
     // Create new superadmin
     const user = new User({
       email: SUPERADMIN_EMAIL,
-      passwordHash,
+      passwordHash: passwordHash,
       role: "superadmin",
       schoolId: null,
+      firstName: SUPERADMIN_FIRST_NAME,
+      lastName: SUPERADMIN_LAST_NAME,
       isActive: true,
       createdAt: new Date(),
     });

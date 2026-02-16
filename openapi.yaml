@@ -22,6 +22,15 @@ paths:
                 email:
                   type: string
                   example: johndoe@gmail.com
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Doe
+                phone:
+                  type: string
+                  example: 123-456-7890
                 password:
                   type: string
                   example: 123456789
@@ -101,16 +110,15 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                firstName:
                   type: string
-                password:
+                  example: John
+                lastName:
                   type: string
-                role:
+                  example: Doe
+                phone:
                   type: string
-                schoolId:
-                  type: string
-                token:
-                  type: string
+                  example: 123-456-7890
       responses:
         200:
           description: User updated
@@ -168,17 +176,8 @@ paths:
       security:
         - BearerAuth: []
       summary: User logout
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                token:
-                  type: string
       responses:
-        200:
+        204:
           description: Logout successful
 
   /api/v1/students/create:
@@ -358,8 +357,6 @@ paths:
                   type: array
                   items:
                     type: string
-                token:
-                  type: string
       responses:
         200:
           description: Classroom created

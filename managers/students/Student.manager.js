@@ -1,26 +1,38 @@
 import Student from "./Student.model.js";
 
 class StudentManager {
-  httpExposed = ["create", "get", "update", "remove", "list"];
+  constructor({ config, mwsRepo, managers, redis }) {
+    this.config = config;
+    this.mwsRepo = mwsRepo;
+    this.managers = managers;
+    this.redis = redis;
 
-  async create(
-    __auth,
-    __rbac,
-    {
-      firstName,
-      lastName,
-      email,
-      admissionNumber,
-      classroomId,
-      schoolId,
-      user,
-    },
-  ) {
+    this.httpExposed = [
+      "create|__auth|__rbac_schooladmin",
+      "list|__auth|__rbac_schooladmin",
+      "update|__auth|__rbac_schooladmin",
+      "get|__auth",
+      "remove|__auth|__rbac_schooladmin",
+    ];
+  }
+
+  async create({
+    firstName,
+    lastName,
+    email,
+    admissionNumber,
+    classroomId,
+    schoolId,
+    user,
+  }) {
     const exists = await Student.findOne({
       $or: [{ email }, { admissionNumber }],
     });
     if (exists)
-      return { ok: false, error: "Email or admission number already exists" };
+      return {
+        success: false,
+        message: "Email or admission number already exists",
+      };
     const student = new Student({
       firstName,
       lastName,
@@ -31,16 +43,16 @@ class StudentManager {
       createdBy: user._id,
     });
     await student.save();
-    return { ok: true, data: student };
+    return { success: true, data: student };
   }
 
-  async get(__auth, { id }) {
+  async get({ id }) {
     const student = await Student.findById(id);
-    if (!student) return { ok: false, error: "Student not found" };
-    return { ok: true, data: student };
+    if (!student) return { success: false, message: "Student not found" };
+    return { success: true, data: student };
   }
 
-  async update(__auth, __rbac, { id, ...updates }) {
+  async update({ id, ...updates }) {
     if (updates.email || updates.admissionNumber) {
       const exists = await Student.findOne({
         $or: [
@@ -52,20 +64,23 @@ class StudentManager {
         _id: { $ne: id },
       });
       if (exists)
-        return { ok: false, error: "Email or admission number already exists" };
+        return {
+          success: false,
+          message: "Email or admission number already exists",
+        };
     }
     const student = await Student.findByIdAndUpdate(id, updates, { new: true });
-    if (!student) return { ok: false, error: "Student not found" };
-    return { ok: true, data: student };
+    if (!student) return { success: false, message: "Student not found" };
+    return { success: true, data: student };
   }
 
-  async remove(__auth, __rbac, { id }) {
+  async remove({ id }) {
     const student = await Student.findByIdAndDelete(id);
-    if (!student) return { ok: false, error: "Student not found" };
-    return { ok: true, data: student };
+    if (!student) return { success: false, message: "Student not found" };
+    return { success: true, data: student };
   }
 
-  async list(__auth, __rbac, { classroomId, schoolId, page = 1, limit = 10 }) {
+  async list({ classroomId, schoolId, page = 1, limit = 10 }) {
     const query = {};
     if (classroomId) query.classroomId = classroomId;
     if (schoolId) query.schoolId = schoolId;
@@ -77,7 +92,7 @@ class StudentManager {
       Student.countDocuments(query),
     ]);
     return {
-      ok: true,
+      success: true,
       data: {
         students,
         pagination: {

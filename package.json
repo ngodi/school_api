@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon index.js",
     "seed:superadmin": "node scripts/seedSuperadmin.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --runInBand",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage"
   },

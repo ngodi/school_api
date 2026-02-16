@@ -20,14 +20,12 @@ const studentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Auto-generate admissionNumber before saving if not set
-studentSchema.pre("save", async function (next) {
+studentSchema.pre("save", async function () {
   if (!this.admissionNumber) {
     // Format: ADM + timestamp + random 3 digits
     const rand = Math.floor(100 + Math.random() * 900);
     this.admissionNumber = `ADM${Date.now()}${rand}`;
   }
-  next();
 });
 
 const Student = mongoose.model("Student", studentSchema);

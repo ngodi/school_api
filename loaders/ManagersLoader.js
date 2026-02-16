@@ -22,32 +22,39 @@ export default class ManagersLoader {
       config: this.config,
       mwsRepo: this.mwsRepo,
       managers: this.managers,
+      redis: null,
     };
   }
 
   async load() {
-    // load middlewares
+    // Connect Mongoose
+    this.managers.mongoose = await connectWithRetry();
+
+    // Connect Redis
+    const redis = await connectRedisWithRetry({
+      REDIS_URL: this.config.REDIS_URL,
+    });
+    this.injectable.redis = redis;
+
+    // Load middlewares (auth, rbac, etc.)
     const middlewaresLoader = new MiddlewaresLoader(this.injectable);
     this.mwsRepo = await middlewaresLoader.load();
-
-    // injectable mws
     this.injectable.mwsRepo = this.mwsRepo;
 
-    // Register managers
+    // Core managers
     this.managers.responseDispatcher = new ResponseDispatcher();
     this.managers.health = new HealthManager(this.injectable);
     this.managers.mwsExec = new VirtualStack({ mwsRepo: this.mwsRepo });
 
-    this.managers.schools = new SchoolManager({
-      config: this.config,
-      mwsRepo: this.mwsRepo,
-    });
+    this.managers.schools = new SchoolManager(this.injectable);
 
-    this.managers.users = UserManager;
-    this.managers.classrooms = ClassroomManager;
-    this.managers.students = StudentManager;
-    // ...
-    // API handler
+    this.managers.users = new UserManager(this.injectable);
+
+    this.managers.classrooms = new ClassroomManager(this.injectable);
+
+    this.managers.students = new StudentManager(this.injectable);
+
+    // API handler — exposes httpExposed methods as routes
     this.managers.schoolApi = new ApiHandler({
       ...this.injectable,
       prop: "httpExposed",
@@ -57,9 +64,6 @@ export default class ManagersLoader {
       config: this.config,
       managers: this.managers,
     });
-
-    this.managers.mongoose = await connectWithRetry();
-    this.managers.redis = await connectRedisWithRetry();
 
     return this.managers;
   }

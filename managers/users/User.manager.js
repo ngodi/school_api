@@ -1,15 +1,29 @@
 import User from "./User.model.js";
 import bcrypt from "bcrypt";
 import config from "../../config.js";
-import { get } from "mongoose";
 
-const UserManager = {
-  // List of exposed functions for API manager
-  httpExposed: ["create", "login", "logout", "list", "get", "update", "remove"],
+export default class UserManager {
+  constructor({ config, mwsRepo, managers, redis }) {
+    this.config = config;
+    this.mwsRepo = mwsRepo;
+    this.managers = managers;
+    this.redis = redis;
+
+    this.httpExposed = [
+      "login",
+      "logout|__auth",
+      "create|__auth|__rbac_superadmin",
+      "list|__auth|__rbac_superadmin",
+      "update|__auth|__rbac_superadmin",
+      "get|__auth",
+      "remove|__auth|__rbac_superadmin",
+    ];
+  }
+
   /**
    * List users with pagination
    */
-  async list({ page = 1, limit = 10 }, __auth, __rbac_superadmin) {
+  async list({ page = 1, limit = 10 }) {
     page = Math.max(1, parseInt(page));
     limit = Math.max(1, Math.min(100, parseInt(limit)));
     const skip = (page - 1) * limit;
@@ -33,13 +47,20 @@ const UserManager = {
         },
       },
     };
-  },
+  }
 
   /**
    * Get user by ID
    */
-  async get({ id }, __auth, __rbac_schooladmin) {
-    const user = await User.findById(id).populate(
+  async get(data) {
+    if (
+      data.user.role === "schooladmin" &&
+      data.user.id.toString() !== data.id
+    ) {
+      return { success: false, message: "Not authorized to access this user" };
+    }
+
+    const user = await User.findById(data.id).populate(
       "schoolId",
       "name address contactEmail phone",
     );
@@ -51,18 +72,20 @@ const UserManager = {
       message: "User retrieved successfully",
       data: user,
     };
-  },
+  }
 
   /**
    * Update user by ID
    */
-  async update({ id, ...updates }, __auth, __rbac_superadmin) {
+  async update({ id, ...updates }) {
+    const editableFields = ["firstName", "lastName", "phone"];
+
     const user = await User.findById(id);
     if (!user) {
       return { success: false, message: "User not found" };
     }
     Object.keys(updates).forEach((key) => {
-      if (key !== "password") {
+      if (editableFields.includes(key)) {
         user[key] = updates[key];
       }
     });
@@ -72,12 +95,12 @@ const UserManager = {
       message: "User updated successfully",
       data: user,
     };
-  },
+  }
 
   /**
    * Delete user by ID
    */
-  async remove({ id }, __auth, __rbac_superadmin) {
+  async remove({ id }) {
     const user = await User.findByIdAndDelete(id);
     if (!user) {
       return { success: false, message: "User not found" };
@@ -86,13 +109,14 @@ const UserManager = {
       success: true,
       message: "User deleted successfully",
     };
-  },
+  }
 
   /**
    * Create user (school_admin) by superadmin or schooladmin
    */
-  async create(data, __auth, __validators, __rbac_superadmin) {
-    const { email, password, role, schoolId } = data;
+  async create(data) {
+    const { email, password, role, schoolId, firstName, lastName, phone } =
+      data;
     // Only allow creation of school_admin users
     if (role !== "schooladmin") {
       return {
@@ -106,7 +130,15 @@ const UserManager = {
       return { success: false, message: "Email already in use" };
     }
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = new User({ email, passwordHash, role, schoolId });
+    const user = new User({
+      email,
+      passwordHash,
+      role,
+      schoolId,
+      firstName,
+      lastName,
+      phone,
+    });
     await user.save();
     return {
       success: true,
@@ -118,7 +150,7 @@ const UserManager = {
         schoolId: user.schoolId,
       },
     };
-  },
+  }
 
   /**
    * User login
@@ -154,18 +186,23 @@ const UserManager = {
         },
       },
     };
-  },
+  }
 
   /**
    * User logout
    */
   async logout({ token }) {
-    // For stateless JWT, logout is handled client-side (token deletion).
+    // Get token expiration
+    const decoded = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString(),
+    );
+    const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+
+    // Store in Redis
+    await this.redis.set(`bl_${token}`, "true", { EX: ttl });
     return {
       success: true,
       message: "User logged out successfully",
     };
-  },
-};
-
-export default UserManager;
+  }
+}

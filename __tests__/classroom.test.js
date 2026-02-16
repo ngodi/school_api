@@ -1,71 +1,93 @@
 import request from "supertest";
-import app from "../index.js";
 import mongoose from "mongoose";
-import Classroom from "../managers/school/Classroom.model.js";
-import User from "../managers/user/User.model.js";
+import bcrypt from "bcrypt";
+import { app, server } from "../index.js"; // ← export server from index.js
+import User from "../managers/users/User.model.js";
+import School from "../managers/schools/School.model.js";
 
-// This test assumes a schoolId is available.
 describe("Classroom Endpoints", () => {
   let superadminToken;
-  let schooladminToken;
-  let schoolId = new mongoose.Types.ObjectId();
+  let schoolId;
+  let superadminId;
   const password = "Password123!";
-  const classroomCode = "A1";
+  const classroomCode = `A${Date.now()}`;
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(
-        process.env.MONGO_TEST_URI ||
-          "mongodb://localhost:27017/school_management_test",
-      );
-    }
-    await Classroom.deleteMany({});
-    await User.deleteMany({});
+    await mongoose.connection.dropDatabase();
+
     // Create superadmin
     const superadmin = new User({
-      email: "superadmin@classroom.com",
-      passwordHash: await (await import("bcrypt")).default.hash(password, 10),
+      email: `superadmin_${Date.now()}@classroom.com`,
+      passwordHash: await bcrypt.hash(password, 10),
       role: "superadmin",
+      firstName: "Super",
+      lastName: "Admin",
+      phone: "1234567890",
     });
     await superadmin.save();
-    // Login as superadmin
+    superadminId = superadmin._id;
+
+    // Login superadmin
     const res = await request(app)
-      .post("/api/v1/auth/login")
-      .send({ email: "superadmin@classroom.com", password });
+      .post("/api/v1/users/login")
+      .send({ email: superadmin.email, password });
+
     superadminToken = res.body.data.token;
+
+    // Create school
+    const school = new School({
+      name: `Test School ${Date.now()}`,
+      address: "123 Main St",
+      contactEmail: "school@example.com",
+      phone: "1234567890",
+      createdBy: superadminId,
+    });
+    await school.save();
+    schoolId = school._id;
   });
 
   afterAll(async () => {
+    await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
+
+    await new Promise((resolve) => server.close(resolve));
   });
 
   it("should create a classroom by superadmin", async () => {
-    const res = await request(app).post("/api/v1/admin/classrooms").send({
-      name: "Class A",
-      code: classroomCode,
-      schoolId,
-      token: superadminToken,
-    });
-    expect(res.body.ok).toBe(true);
+    const res = await request(app)
+      .post("/api/v1/classrooms/create")
+      .send({
+        name: "Class A",
+        code: classroomCode,
+        schoolId,
+        createdBy: superadminId,
+      })
+      .set("Authorization", `Bearer ${superadminToken}`);
+
+    expect(res.body.success).toBe(true);
     expect(res.body.data.name).toBe("Class A");
   });
 
   it("should not allow duplicate classroom code in same school", async () => {
-    const res = await request(app).post("/api/v1/admin/classrooms").send({
-      name: "Class B",
-      code: classroomCode,
-      schoolId,
-      token: superadminToken,
-    });
-    expect(res.body.ok).toBe(false);
+    const res = await request(app)
+      .post("/api/v1/classrooms/create")
+      .send({
+        name: "Class B",
+        code: classroomCode,
+        schoolId,
+      })
+      .set("Authorization", `Bearer ${superadminToken}`);
+
+    expect(res.body.success).toBe(false);
   });
 
   it("should list classrooms", async () => {
     const res = await request(app)
-      .get("/api/v1/admin/classrooms")
-      .query({ schoolId })
-      .send();
-    expect(res.body.ok).toBe(true);
-    expect(Array.isArray(res.body.data)).toBe(true);
+      .get("/api/v1/classrooms/list")
+      .query({ schoolId: schoolId.toString(), page: 1, limit: 10 })
+      .set("Authorization", `Bearer ${superadminToken}`);
+
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data.classrooms)).toBe(true);
   });
 });

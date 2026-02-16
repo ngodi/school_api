@@ -1,16 +1,3 @@
-import express from "express";
-
-function getParamNames(fn) {
-  const fnStr = fn.toString().replace(/\/\//g, " ");
-  const args = fnStr.match(/^[\s\S]*?\(([^)]*)\)/);
-  if (!args) return "";
-  return args[1]
-    .split(",")
-    .map((a) => a.trim())
-    .filter(Boolean)
-    .join(",");
-}
-
 export default class ApiHandler {
   constructor({ config, mwsRepo, managers, prop }) {
     this.config = config;
@@ -26,38 +13,52 @@ export default class ApiHandler {
   _buildMethodMatrix() {
     Object.keys(this.managers).forEach((mk) => {
       const manager = this.managers[mk];
-      if (manager && manager[this.prop]) {
-        this.methodMatrix[mk] = this.methodMatrix[mk] || {};
-        manager[this.prop].forEach((fnName) => {
-          let method = "post";
-          // Maps RESTful function names to HTTP methods
+      if (!manager || !manager[this.prop]) return;
+
+      manager[this.prop].forEach((entry) => {
+        const [methodAndFn, ...explicitMws] = entry.split("|");
+        let method = "post";
+        let fnName = methodAndFn;
+
+        if (methodAndFn.includes("=")) {
+          [method, fnName] = methodAndFn.split("=");
+          method = method.toLowerCase();
+        } else {
+          // Built-in name→method mappings for common conventions
           if (fnName === "list") method = "get";
           if (fnName === "get") method = "get";
           if (fnName === "create") method = "post";
           if (fnName === "update") method = "put";
           if (fnName === "remove") method = "delete";
-          if (!this.methodMatrix[mk][method]) {
-            this.methodMatrix[mk][method] = [];
+        }
+
+        // Validate the function actually exists on the manager
+        if (!manager[fnName]) {
+          throw new Error(
+            `[ApiHandler] Function "${fnName}" not found on manager "${mk}". ` +
+              `Check that httpExposed entries match actual method names.`,
+          );
+        }
+
+        // Register in method matrix
+        if (!this.methodMatrix[mk]) this.methodMatrix[mk] = {};
+        if (!this.methodMatrix[mk][method]) this.methodMatrix[mk][method] = [];
+        this.methodMatrix[mk][method].push(fnName);
+
+        // Register explicit middleware stack
+        const key = `${mk}.${fnName}`;
+        this.mwsStack[key] = [];
+
+        explicitMws.forEach((mwName) => {
+          if (!this.mwsRepo[mwName]) {
+            throw new Error(
+              `[ApiHandler] Middleware "${mwName}" declared for "${mk}.${fnName}" ` +
+                `but not found in mwsRepo. Check your mws/ filenames.`,
+            );
           }
-          this.methodMatrix[mk][method].push(fnName);
-          const fn = manager[fnName];
-          const params = getParamNames(fn)
-            .split(",")
-            .map((p) => p.trim())
-            .filter(Boolean);
-          params.forEach((param) => {
-            if (param.startsWith("__")) {
-              if (!this.mwsRepo[param]) {
-                throw Error(`Middleware ${param} not found`);
-              }
-              if (!this.mwsStack[`${mk}.${fnName}`]) {
-                this.mwsStack[`${mk}.${fnName}`] = [];
-              }
-              this.mwsStack[`${mk}.${fnName}`].push(param);
-            }
-          });
+          this.mwsStack[key].push(mwName);
         });
-      }
+      });
     });
   }
 
@@ -65,7 +66,12 @@ export default class ApiHandler {
     try {
       return await targetModule[fnName](data);
     } catch (err) {
-      return { message: `${fnName} failed: ${err.message}` };
+      console.error(`[ApiHandler] Error in ${fnName}:`, err);
+      return {
+        success: false,
+        message: `${fnName} failed: ${err.message}`,
+        code: 500,
+      };
     }
   }
 
@@ -74,42 +80,49 @@ export default class ApiHandler {
     const moduleName = req.params.moduleName;
     const fnName = req.params.fnName;
     const moduleMatrix = this.methodMatrix[moduleName];
+
     if (!moduleMatrix) {
-      return res
-        .status(404)
-        .json({ success: false, message: `Module ${moduleName} not found` });
+      return res.status(404).json({
+        success: false,
+        message: `Module "${moduleName}" not found`,
+      });
     }
     if (!moduleMatrix[method]) {
-      return res
-        .status(405)
-        .json({ success: false, message: `Unsupported method ${method}` });
+      return res.status(405).json({
+        success: false,
+        message: `Method ${req.method} not supported on "${moduleName}"`,
+      });
     }
     if (!moduleMatrix[method].includes(fnName)) {
       return res.status(404).json({
         success: false,
-        message: `Function ${fnName} not found in module ${moduleName}`,
+        message: `Function "${fnName}" not found on module "${moduleName}"`,
       });
     }
-    const mwStack = this.mwsStack[`${moduleName}.${fnName}`] || [];
+
+    // Build request data — token extracted here, available to middleware as data.token
     let data = {
       ...req.body,
       ...req.query,
-      token: req.headers.authorization?.replace("Bearer ", ""),
+      token: req.headers.authorization?.replace("Bearer ", "") ?? null,
     };
 
+    // Run middleware stack — short-circuit immediately on first failure
+    const mwStack = this.mwsStack[`${moduleName}.${fnName}`] || [];
     for (const mwName of mwStack) {
-      const mw = this.mwsRepo[mwName];
-      const result = await mw(data);
+      const mwFn = this.mwsRepo[mwName];
+      const result = await mwFn(data);
       if (!result.success) {
         return res
-          .status(401)
+          .status(result.code || 400)
           .json({ success: false, message: result.message });
       }
+
       data = result.data;
     }
+
     const targetModule = this.managers[moduleName];
     const result = await this._exec({ targetModule, fnName, data });
-    console.log(result);
     this.managers.responseDispatcher.dispatch(res, result);
   }
 }
