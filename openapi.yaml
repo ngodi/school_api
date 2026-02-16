@@ -1,0 +1,612 @@
+openapi: 3.0.0
+info:
+  title: School Management API
+  version: 1.0.0
+  description: API documentation for School Management
+servers:
+  - url: http://localhost:5000
+paths:
+  /api/v1/users/create:
+    post:
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      summary: Create a user (schooladmin) by superadmin or schooladmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: johndoe@gmail.com
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Doe
+                phone:
+                  type: string
+                  example: 123-456-7890
+                password:
+                  type: string
+                  example: 123456789
+                role:
+                  type: string
+                  example: schooladmin
+                schoolId:
+                  type: string
+      responses:
+        200:
+          description: User created
+        400:
+          description: Validation error
+        403:
+          description: Forbidden
+  /api/v1/users/list:
+    get:
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      summary: Get all users
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (default 1)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of items per page (default 10)
+      responses:
+        200:
+          description: List of users
+        403:
+          description: Forbidden
+
+  /api/v1/users/get:
+    get:
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      summary: Get user by ID
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User details
+        404:
+          description: Not found
+        403:
+          description: Forbidden
+  /api/v1/users/update:
+    put:
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      summary: Update user by ID
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Doe
+                phone:
+                  type: string
+                  example: 123-456-7890
+      responses:
+        200:
+          description: User updated
+        400:
+          description: Validation error
+        404:
+          description: Not found
+        403:
+          description: Forbidden
+
+  /api/v1/users/remove:
+    delete:
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      summary: Delete user by ID
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User deleted
+        404:
+          description: Not found
+        403:
+          description: Forbidden
+  /api/v1/users/login:
+    post:
+      tags: [Users]
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: superadmin@example.com
+                password:
+                  type: string
+                  example: adminpassword
+      responses:
+        200:
+          description: Login successful
+        400:
+          description: Invalid credentials
+  /api/v1/users/logout:
+    post:
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      summary: User logout
+      responses:
+        204:
+          description: Logout successful
+
+  /api/v1/students/create:
+    post:
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      summary: Create a student (schooladmin or superadmin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                classroomId:
+                  type: string
+                schoolId:
+                  type: string
+                enrollmentDate:
+                  type: string
+                  format: date
+                status:
+                  type: string
+                  enum: [active, transferred]
+                token:
+                  type: string
+      responses:
+        200:
+          description: Student created
+        400:
+          description: Validation error
+        403:
+          description: Forbidden
+
+  /api/v1/students/list:
+    get:
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      summary: List students (optionally by classroom or school)
+      parameters:
+        - in: query
+          name: classroomId
+          schema:
+            type: string
+        - in: query
+          name: schoolId
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (default 1)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of items per page (default 10)
+      responses:
+        200:
+          description: List of students
+
+  /api/v1/students/get:
+    get:
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      summary: Get student by ID
+      parameters:
+        - in: query
+          name: studentId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Student details
+        404:
+          description: Not found
+
+  /api/v1/students/update:
+    put:
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      summary: Update student by ID
+      parameters:
+        - in: query
+          name: studentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                classroomId:
+                  type: string
+                schoolId:
+                  type: string
+                enrollmentDate:
+                  type: string
+                  format: date
+                status:
+                  type: string
+                  enum: [active, transferred]
+                token:
+                  type: string
+      responses:
+        200:
+          description: Student updated
+        400:
+          description: Validation error
+        404:
+          description: Not found
+
+  /api/v1/students/remove:
+    delete:
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      summary: Delete student by ID
+      parameters:
+        - in: query
+          name: studentId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Student deleted
+        404:
+          description: Not found
+
+  /api/v1/classrooms/create:
+    post:
+      tags: [Classrooms]
+      security:
+        - BearerAuth: []
+      summary: Create a classroom (schooladmin or superadmin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                code:
+                  type: string
+                schoolId:
+                  type: string
+                capacity:
+                  type: integer
+                courses:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        200:
+          description: Classroom created
+        400:
+        description: Bad request
+        403:
+          description: Forbidden
+
+  /api/v1/classrooms/list:
+    get:
+      tags: [Classrooms]
+      security:
+        - BearerAuth: []
+      summary: List classrooms (optionally by school)
+      parameters:
+        - in: query
+          name: schoolId
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (default 1)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of items per page (default 10)
+      responses:
+        200:
+          description: List of classrooms
+
+  /api/v1/classrooms/get:
+    get:
+      tags: [Classrooms]
+      security:
+        - BearerAuth: []
+      summary: Get classroom by ID
+      parameters:
+        - in: query
+          name: classroomId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Classroom details
+        404:
+          description: Not found
+
+  /api/v1/classrooms/update:
+    put:
+      tags: [Classrooms]
+      security:
+        - BearerAuth: []
+      summary: Update classroom by ID
+      parameters:
+        - in: query
+          name: classroomId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                code:
+                  type: string
+                capacity:
+                  type: integer
+                courses:
+                  type: array
+                  items:
+                    type: string
+                token:
+                  type: string
+      responses:
+        200:
+          description: Classroom updated
+        400:
+          description: Validation error
+        404:
+          description: Not found
+
+  /api/v1/classrooms/remove:
+    delete:
+      tags: [Classrooms]
+      security:
+        - BearerAuth: []
+      summary: Delete classroom by ID
+      parameters:
+        - in: query
+          name: classroomId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Classroom deleted
+        404:
+          description: Not found
+
+  /api/v1/schools/create:
+    post:
+      tags: [Schools]
+      security:
+        - BearerAuth: []
+      summary: Create a school (superadmin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Greenwood High School"
+                address:
+                  type: string
+                  example: "123 Main St, Springfield"
+                contactEmail:
+                  type: string
+                  example: "johndoe@gmail.com"
+                phone:
+                  type: string
+                  example: "+1-555-123-4567"
+      responses:
+        200:
+          description: School created
+        400:
+          description: Validation error
+        403:
+          description: Forbidden
+
+  /api/v1/schools/list:
+    get:
+      tags: [Schools]
+      security:
+        - BearerAuth: []
+      summary: List schools
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (default 1)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of items per page (default 10)
+      responses:
+        200:
+          description: List of schools
+
+  /api/v1/schools/get:
+    get:
+      tags: [Schools]
+      security:
+        - BearerAuth: []
+      summary: Get school by ID
+      parameters:
+        - in: query
+          name: schoolId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: School details
+        404:
+          description: Not found
+
+  /api/v1/schools/update:
+    put:
+      tags: [Schools]
+      security:
+        - BearerAuth: []
+      summary: Update school by ID
+      parameters:
+        - in: query
+          name: schoolId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                contactEmail:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        200:
+          description: School updated
+        400:
+          description: Validation error
+        404:
+          description: Not found
+
+  /api/v1/schools/remove:
+    delete:
+      tags: [Schools]
+      security:
+        - BearerAuth: []
+      summary: Delete school by ID
+      parameters:
+        - in: query
+          name: schoolId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: School deleted
+        404:
+          description: Not found
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        200:
+          description: API is healthy
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

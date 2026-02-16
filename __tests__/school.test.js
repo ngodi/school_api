@@ -1,108 +1,168 @@
 import request from "supertest";
-import app from "../index.js";
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import { app, server } from "../index.js";
+import User from "../managers/users/User.model.js";
+import School from "../managers/schools/School.model.js";
+
+let schoolId;
+let superadminToken;
+let superadminId;
+
+const password = "Password123!";
+const superadminEmail = `superadmin_${Date.now()}@school.com`;
+
+const schoolCreateParams = {
+  name: "Test School",
+  address: "123 Main St",
+  contactEmail: "school@example.com",
+  phone: "1234567890",
+};
 
 describe("School Manager CRUD Tests", () => {
-  let schoolId;
-  let token = "test-token";
-
   beforeAll(async () => {
-    // Connect to test database
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(
-        process.env.MONGO_TEST_URI ||
-          "mongodb://localhost:27017/school_management_test",
-      );
-    }
+    await mongoose.connection.dropDatabase();
+
+    const superadmin = new User({
+      email: superadminEmail,
+      passwordHash: await bcrypt.hash(password, 10),
+      role: "superadmin",
+      firstName: "Super",
+      lastName: "Admin",
+      phone: "1234567890",
+    });
+    await superadmin.save();
+    superadminId = superadmin._id;
+
+    const res = await request(app)
+      .post("/api/v1/users/login")
+      .send({ email: superadminEmail, password });
+
+    superadminToken = res.body.data.token;
   });
 
   afterAll(async () => {
+    await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
+    await new Promise((resolve) => server.close(resolve));
   });
 
-  describe("POST /api/v1/admin/schools", () => {
+  describe("POST /api/v1/schools/create", () => {
     it("should fail without authentication", async () => {
-      const res = await request(app).post("/api/v1/admin/schools").send({
-        name: "Test School",
-        address: "123 Main St",
-        contactEmail: "school@example.com",
-        phone: "1234567890",
-      });
-      expect(res.status).toBe(403);
-      expect(res.body.ok).toBe(false);
+      const res = await request(app)
+        .post("/api/v1/schools/create")
+        .send(schoolCreateParams);
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
     });
+
     it("should create school with valid token", async () => {
-      const res = await request(app).post("/api/v1/admin/schools").send({
-        token,
-        name: "Test School",
-        address: "123 Main St",
-        contactEmail: "school@example.com",
-        phone: "1234567890",
+      const res = await request(app)
+        .post("/api/v1/schools/create")
+        .set("Authorization", `Bearer ${superadminToken}`)
+        .send(schoolCreateParams);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe("Test School");
+
+      schoolId = res.body.data._id;
+    });
+  });
+
+  describe("GET /api/v1/schools/get", () => {
+    let school;
+
+    beforeAll(async () => {
+      school = new School({
+        ...schoolCreateParams,
+        name: "Douala School2",
+        createdBy: superadminId,
       });
-      if (res.body.ok) {
-        schoolId = res.body.data._id;
-        expect(res.body.data.name).toBe("Test School");
-      }
+      await school.save();
     });
-  });
 
-  describe("GET /api/v1/schools/:id", () => {
     it("should fail without authentication", async () => {
-      const res = await request(app).get(
-        `/api/v1/schools/${schoolId || "invalid"}`,
-      );
-      expect([403, 404]).toContain(res.status);
-      expect(res.body.ok).toBe(false);
+      const res = await request(app)
+        .get(`/api/v1/schools/get`)
+        .query({ schoolId: school._id.toString() });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
     });
+
     it("should retrieve school with valid token", async () => {
-      if (schoolId) {
-        const res = await request(app)
-          .get(`/api/v1/schools/${schoolId}`)
-          .send({ token });
-        expect([200, 403]).toContain(res.status);
-      }
+      const res = await request(app)
+        .get(`/api/v1/schools/get`)
+        .query({ schoolId: school._id.toString() })
+        .set("Authorization", `Bearer ${superadminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data._id).toBe(school._id.toString());
     });
   });
 
-  describe("PUT /api/v1/admin/schools/:id", () => {
+  describe("PUT /api/v1/schools/update", () => {
     it("should fail without authentication", async () => {
       const res = await request(app)
-        .put(`/api/v1/admin/schools/${schoolId || "invalid"}`)
+        .put(`/api/v1/schools/update`)
+        .query({ schoolId: schoolId })
         .send({ name: "Updated School" });
-      expect([403, 404]).toContain(res.status);
-      expect(res.body.ok).toBe(false);
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
     });
+
     it("should update school with valid token and id", async () => {
-      if (schoolId) {
-        const res = await request(app)
-          .put(`/api/v1/admin/schools/${schoolId}`)
-          .send({ token, name: "Updated School" });
-        expect([200, 400]).toContain(res.status);
-      }
+      const res = await request(app)
+        .put(`/api/v1/schools/update`)
+        .query({ schoolId: schoolId })
+        .set("Authorization", `Bearer ${superadminToken}`)
+        .send({ name: "Updated School" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe("Updated School");
     });
   });
 
-  describe("DELETE /api/v1/admin/schools/:id", () => {
+  describe("GET /api/v1/schools/list", () => {
     it("should fail without authentication", async () => {
-      const res = await request(app)
-        .delete(`/api/v1/admin/schools/${schoolId || "invalid"}`)
-        .send();
-      expect([403, 404]).toContain(res.status);
-      expect(res.body.ok).toBe(false);
+      const res = await request(app).get("/api/v1/schools/list");
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
     });
-    it("should delete school with valid token and id", async () => {
-      if (schoolId) {
-        const res = await request(app)
-          .delete(`/api/v1/admin/schools/${schoolId}`)
-          .send({ token });
-        expect([200, 400]).toContain(res.status);
-      }
+
+    it("should list all schools with valid token", async () => {
+      const res = await request(app)
+        .get("/api/v1/schools/list")
+        .set("Authorization", `Bearer ${superadminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data.schools)).toBe(true);
     });
   });
-  describe("GET /api/v1/schools", () => {
-    it("should list all schools", async () => {
-      const res = await request(app).get("/api/v1/schools").send({ token });
-      expect([200, 403]).toContain(res.status);
+
+  describe("DELETE /api/v1/schools/remove", () => {
+    it("should fail without authentication", async () => {
+      const res = await request(app)
+        .delete(`/api/v1/schools/remove`)
+        .query({ schoolId: schoolId });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it("should delete school with valid token and id", async () => {
+      const res = await request(app)
+        .delete(`/api/v1/schools/remove`)
+        .query({ schoolId: schoolId })
+        .set("Authorization", `Bearer ${superadminToken}`);
+
+      expect(res.status).toBe(204);
     });
   });
 });

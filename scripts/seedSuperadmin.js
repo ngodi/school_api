@@ -1,36 +1,49 @@
-import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import User from "../managers/user/User.model.js";
+import User from "../managers/users/User.model.js";
 import connectWithRetry from "../loaders/MongooseLoader.js";
+import config from "../config.js";
 
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://localhost:27017/school_management";
-const SUPERADMIN_EMAIL =
-  process.env.SUPERADMIN_EMAIL || "superadmin@example.com";
-const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD || "supersecret";
+const SUPERADMIN_EMAIL = config.SUPERADMIN_EMAIL;
+const SUPERADMIN_PASSWORD = config.SUPERADMIN_PASSWORD;
+const SUPERADMIN_FIRST_NAME = config.SUPERADMIN_FIRST_NAME;
+const SUPERADMIN_LAST_NAME = config.SUPERADMIN_LAST_NAME;
 
 async function seedSuperadmin() {
   await connectWithRetry();
+
   const existing = await User.findOne({ role: "superadmin" });
-  if (existing) {
-    console.log("Superadmin already exists:", existing.email);
-    process.exit(0);
-  }
+
   const passwordHash = await bcrypt.hash(SUPERADMIN_PASSWORD, 10);
-  const user = new User({
-    email: SUPERADMIN_EMAIL,
-    passwordHash,
-    role: "superadmin",
-    schoolId: null,
-    isActive: true,
-    createdAt: new Date(),
-  });
-  await user.save();
-  console.log("Superadmin created:", SUPERADMIN_EMAIL);
+
+  if (existing) {
+    // Update existing superadmin with default password and ensure active
+    existing.email = SUPERADMIN_EMAIL; // optional: reset email
+    existing.passwordHash = passwordHash;
+    existing.firstName = SUPERADMIN_FIRST_NAME;
+    existing.lastName = SUPERADMIN_LAST_NAME;
+    existing.isActive = true;
+    await existing.save();
+    console.log("Superadmin updated with default password:", SUPERADMIN_EMAIL);
+  } else {
+    // Create new superadmin
+    const user = new User({
+      email: SUPERADMIN_EMAIL,
+      passwordHash: passwordHash,
+      role: "superadmin",
+      schoolId: null,
+      firstName: SUPERADMIN_FIRST_NAME,
+      lastName: SUPERADMIN_LAST_NAME,
+      isActive: true,
+      createdAt: new Date(),
+    });
+    await user.save();
+    console.log("Superadmin created:", SUPERADMIN_EMAIL);
+  }
+
   process.exit(0);
 }
 
 seedSuperadmin().catch((err) => {
-  console.error("Error seeding superadmin:", err);
+  console.log("Error seeding superadmin:", err);
   process.exit(1);
 });

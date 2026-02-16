@@ -1,31 +1,7 @@
 import swaggerUi from "swagger-ui-express";
-import swaggerJSDoc from "swagger-jsdoc";
+import YAML from "yamljs";
+import path from "path";
 
-const swaggerOptions = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "School Management API",
-      version: "1.0.0",
-      description: "API documentation for School Management",
-    },
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
-  },
-  apis: ["./index.js", "./managers/**/*.manager.js"],
-};
-
-const swaggerSpec = swaggerJSDoc(swaggerOptions);
+const swaggerSpec = YAML.load(path.resolve(process.cwd(), "openapi.yaml"));
 
 export { swaggerUi, swaggerSpec };

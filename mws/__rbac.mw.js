@@ -1,12 +1,17 @@
-export default function rbacMiddleware(requiredRole) {
+export default function rbacMiddleware(requiredRoles) {
   return async function __rbac(data) {
     const user = data.user;
     if (!user) {
-      return { ok: false, error: "User not authenticated" };
+      return { success: false, message: "User not authenticated", code: 401 };
     }
-    if (user.role !== requiredRole) {
-      return { ok: false, error: `Access denied: ${requiredRole} only` };
+
+    if (!requiredRoles.includes(user.role)) {
+      return {
+        success: false,
+        message: `Access denied: ${requiredRoles.join(", ")} only`,
+        code: 403,
+      };
     }
-    return { ok: true, data };
+    return { success: true, data, code: 200 };
   };
 }
