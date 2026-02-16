@@ -224,7 +224,8 @@ Transfers must update both schoolId and classroomId.
 
 ## Rate Limiting
 
-100 requests per 15 minutes per IP
+- Gloabl rate-limiting
+  100 requests per 15 minutes per IP
 
 # Installation Guide
 
@@ -247,6 +248,7 @@ Create a .env file:
 - JWT_SECRET=your_jwt_secret_key
 - JWT_EXPIRES_IN=1d
 - SUPERADMIN_EMAIL=your super admin email
+- REDIS_URL=your redis url
 - SUPERADMIN_PASSWORD= your admin password
 - SUPERADMIN_FIRST_NAME=Super
 - SUPERADMIN_LAST_NAME=Admin
@@ -287,3 +289,4 @@ npm run seed:superadmin
 - Soft deletes (deletedAt)
 - Audit logging
 - Redis caching layer
+- Per resource/request rate-limiter
