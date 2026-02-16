@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { swaggerUi, swaggerSpec } from "../../loaders/SwaggerLoader.js";
 import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 
 class SchoolServer {
   constructor({ config, managers }) {
@@ -26,6 +27,17 @@ class SchoolServer {
       legacyHeaders: false,
     });
 
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            "script-src": ["'self'", "'unsafe-inline'"], // required for Swagger UI
+            "img-src": ["'self'", "data:", "https:"], // required for Swagger logo
+          },
+        },
+      }),
+    );
     app.use(cors({ origin: this.config.ALLOWED_ORIGINS }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
