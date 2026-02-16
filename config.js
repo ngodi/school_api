@@ -12,6 +12,7 @@ const config = {
     : [],
   MONGO_URI: process.env.MONGO_URI,
   REDIS_URL: process.env.REDIS_URL,
+  API_URL: process.env.API_URL,
   SUPERADMIN_EMAIL: process.env.SUPERADMIN_EMAIL,
   SUPERADMIN_PASSWORD: process.env.SUPERADMIN_PASSWORD,
   SUPERADMIN_FIRST_NAME: process.env.SUPERADMIN_FIRST_NAME,
