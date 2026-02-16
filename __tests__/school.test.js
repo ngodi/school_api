@@ -107,7 +107,7 @@ describe("School Manager CRUD Tests", () => {
     it("should fail without authentication", async () => {
       const res = await request(app)
         .put(`/api/v1/schools/update`)
-        .query({ schoolId: schoolId })
+        .query({ schoolId })
         .send({ name: "Updated School" });
 
       expect(res.status).toBe(401);
@@ -117,7 +117,7 @@ describe("School Manager CRUD Tests", () => {
     it("should update school with valid token and id", async () => {
       const res = await request(app)
         .put(`/api/v1/schools/update`)
-        .query({ schoolId: schoolId })
+        .query({ schoolId })
         .set("Authorization", `Bearer ${superadminToken}`)
         .send({ name: "Updated School" });
 
@@ -150,7 +150,7 @@ describe("School Manager CRUD Tests", () => {
     it("should fail without authentication", async () => {
       const res = await request(app)
         .delete(`/api/v1/schools/remove`)
-        .query({ schoolId: schoolId });
+        .query({ schoolId });
 
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
@@ -159,7 +159,7 @@ describe("School Manager CRUD Tests", () => {
     it("should delete school with valid token and id", async () => {
       const res = await request(app)
         .delete(`/api/v1/schools/remove`)
-        .query({ schoolId: schoolId })
+        .query({ schoolId })
         .set("Authorization", `Bearer ${superadminToken}`);
 
       expect(res.status).toBe(204);

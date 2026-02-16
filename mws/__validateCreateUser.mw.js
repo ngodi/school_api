@@ -22,7 +22,7 @@ const schema = z.object({
 });
 
 export default function __validateCreateUser() {
-  return async function __validateCreateUser(data) {
+  return function __validateCreateUser(data) {
     const result = schema.safeParse(data);
     if (!result.success) {
       return {

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../managers/users/User.model.js";
 import config from "../config.js";
+import { InternalError } from "../errors/AppError.js";
 
 export default function authMiddleware({ redis }) {
   return async function __auth(data) {
@@ -36,7 +37,7 @@ export default function authMiddleware({ redis }) {
       data.id = user._id.toString();
       return { success: true, data, code: 200 };
     } catch (err) {
-      return { success: false, message: "Invalid token", code: 401 };
+      throw new InternalError(err.message);
     }
   };
 }

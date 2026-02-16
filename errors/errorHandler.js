@@ -39,8 +39,6 @@ export const errorHandler = (err) => {
     };
   }
 
-  // Unexpected error — log server-side, return safe message to client
-  console.error(`[ApiHandler] Unexpected error in ${fnName}:`, err);
   return {
     success: false,
     code: 500,

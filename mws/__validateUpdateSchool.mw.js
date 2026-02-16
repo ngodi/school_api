@@ -13,7 +13,7 @@ const schema = z
   });
 
 export default function __validateUpdateSchool() {
-  return async function __validateUpdateSchool(data) {
+  return function __validateUpdateSchool(data) {
     // id is required to know which school to update
     if (!data.schoolId) {
       return { success: false, code: 422, message: "School id is required" };

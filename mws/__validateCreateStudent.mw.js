@@ -18,7 +18,7 @@ const schema = z.object({
 });
 
 export default function __validateCreateStudent() {
-  return async function __validateCreateStudent(data) {
+  return function __validateCreateStudent(data) {
     const result = schema.safeParse(data);
     if (!result.success) {
       return {

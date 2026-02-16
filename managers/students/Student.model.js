@@ -20,7 +20,7 @@ const studentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-studentSchema.pre("save", async function () {
+studentSchema.pre("save", function () {
   if (!this.admissionNumber) {
     // Format: ADM + timestamp + random 3 digits
     const rand = Math.floor(100 + Math.random() * 900);

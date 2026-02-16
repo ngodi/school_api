@@ -6,7 +6,7 @@ class HealthManager {
     this.httpExposed = ["check"];
   }
 
-  async check(data) {
+  check() {
     return {
       success: true,
       data: {

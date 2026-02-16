@@ -28,7 +28,7 @@ async function seedSuperadmin() {
     // Create new superadmin
     const user = new User({
       email: SUPERADMIN_EMAIL,
-      passwordHash: passwordHash,
+      passwordHash,
       role: "superadmin",
       schoolId: null,
       firstName: SUPERADMIN_FIRST_NAME,

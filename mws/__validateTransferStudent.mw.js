@@ -8,7 +8,7 @@ const schema = z.object({
 });
 
 export default function __validateTransferStudent() {
-  return async function __validateTransferStudent(data) {
+  return function __validateTransferStudent(data) {
     const result = schema.safeParse(data);
     if (!result.success) {
       return {

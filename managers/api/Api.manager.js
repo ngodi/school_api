@@ -1,3 +1,5 @@
+import { errorHandler } from "../../errors/errorHandler";
+
 export default class ApiHandler {
   constructor({ config, mwsRepo, managers, prop }) {
     this.config = config;

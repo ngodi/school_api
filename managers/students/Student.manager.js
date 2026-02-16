@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import Classroom from "../classrooms/Classroom.model.js";
 import School from "../schools/School.model.js";
 import Student from "./Student.model.js";
@@ -74,7 +73,9 @@ class StudentManager {
           message: "Email or admission number already exists",
         };
     }
-    const student = await Student.findByIdAndUpdate(id, updates, { new: true });
+    const student = await Student.findByIdAndUpdate(studentId, updates, {
+      new: true,
+    });
     if (!student) return { success: false, message: "Student not found" };
     return { success: true, data: student };
   }
