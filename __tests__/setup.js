@@ -1,18 +1,24 @@
-// test/setup.js
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import config from "../config";
+
+let replSet;
 
 beforeAll(async () => {
-  if (mongoose.connection.readyState === 0) {
-    await mongoose.connect(
-      config.MONGO_TEST_URI ||
-        "mongodb://localhost:27017/school_management_test",
-    );
-  }
-});
+  replSet = await MongoMemoryReplSet.create({
+    replSet: { count: 1 },
+  });
+
+  const uri = replSet.getUri();
+
+  await mongoose.connect(uri, {
+    directConnection: true,
+  });
+
+  console.log("Test MongoDB replica set started:", uri);
+}, 30000);
 
 afterAll(async () => {
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.connection.close();
-  }
-});
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+  await replSet.stop();
+}, 20000);

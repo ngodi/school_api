@@ -30,6 +30,7 @@ export default class ApiHandler {
           if (fnName === "create") method = "post";
           if (fnName === "update") method = "put";
           if (fnName === "remove") method = "delete";
+          if (fnName === "transfer") method = "post";
         }
 
         // Validate the function actually exists on the manager

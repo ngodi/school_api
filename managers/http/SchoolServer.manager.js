@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { swaggerUi, swaggerSpec } from "../../loaders/SwaggerLoader.js";
+import rateLimit from "express-rate-limit";
 
 class SchoolServer {
   constructor({ config, managers }) {
@@ -13,9 +14,22 @@ class SchoolServer {
   configure() {
     const app = this.app;
 
+    // Global: 100 requests per 15 minutes per IP
+    const globalLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 100,
+      message: {
+        success: false,
+        message: "Too many requests, please try again later",
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+
     app.use(cors({ origin: this.config.ALLOWED_ORIGINS }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+    app.use(globalLimiter);
 
     app.use("/api/v1/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

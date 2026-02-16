@@ -332,6 +332,195 @@ paths:
         404:
           description: Not found
 
+  /api/v1/students/transfer:
+    post:
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      summary: Transfer a student to a different school or classroom
+      description: |
+        Transfers a student to a new school and/or classroom. 
+        The requesting user must be a schooladmin of either the student's 
+        current school (source) or the destination school. Superadmins can 
+        transfer any student. A transfer history record is created on every 
+        successful transfer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentId
+                - toSchoolId
+                - toClassroomId
+              properties:
+                studentId:
+                  type: string
+                  description: ID of the student to transfer
+                  example: "64b1f2c3e4b0a1d2e3f40001"
+                toSchoolId:
+                  type: string
+                  description: ID of the destination school
+                  example: "64b1f2c3e4b0a1d2e3f40002"
+                toClassroomId:
+                  type: string
+                  description: ID of the destination classroom (must belong to toSchoolId)
+                  example: "64b1f2c3e4b0a1d2e3f40003"
+                reason:
+                  type: string
+                  description: Optional reason for the transfer
+                  example: "Family relocation"
+      responses:
+        200:
+          description: Student transferred successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Student transferred successfully
+                  data:
+                    type: object
+                    properties:
+                      student:
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                            example: "64b1f2c3e4b0a1d2e3f40001"
+                          firstName:
+                            type: string
+                            example: "Jane"
+                          lastName:
+                            type: string
+                            example: "Doe"
+                          email:
+                            type: string
+                            example: "jane.doe@example.com"
+                          schoolId:
+                            type: string
+                            description: Now reflects the destination school
+                            example: "64b1f2c3e4b0a1d2e3f40002"
+                          classroomId:
+                            type: string
+                            description: Now reflects the destination classroom
+                            example: "64b1f2c3e4b0a1d2e3f40003"
+                          status:
+                            type: string
+                            enum: [active, transferred]
+                            example: transferred
+                          admissionNumber:
+                            type: string
+                            example: "ADM17123456789123"
+                      transfer:
+                        type: object
+                        description: Transfer history record created for this transfer
+                        properties:
+                          _id:
+                            type: string
+                            example: "64b1f2c3e4b0a1d2e3f40010"
+                          studentId:
+                            type: string
+                            example: "64b1f2c3e4b0a1d2e3f40001"
+                          fromSchoolId:
+                            type: string
+                            example: "64b1f2c3e4b0a1d2e3f40004"
+                          fromClassroomId:
+                            type: string
+                            example: "64b1f2c3e4b0a1d2e3f40005"
+                          toSchoolId:
+                            type: string
+                            example: "64b1f2c3e4b0a1d2e3f40002"
+                          toClassroomId:
+                            type: string
+                            example: "64b1f2c3e4b0a1d2e3f40003"
+                          transferredBy:
+                            type: string
+                            description: ID of the user who initiated the transfer
+                            example: "64b1f2c3e4b0a1d2e3f40006"
+                          reason:
+                            type: string
+                            nullable: true
+                            example: "Family relocation"
+                          status:
+                            type: string
+                            enum: [pending, completed, cancelled]
+                            example: completed
+                          transferredAt:
+                            type: string
+                            format: date-time
+                            example: "2026-02-16T10:00:00.000Z"
+        401:
+          description: No token provided or token is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: No token provided
+        403:
+          description: Schooladmin is not associated with the source or destination school
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: You can only transfer students from or to your own school
+        404:
+          description: Student, destination school, or destination classroom not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Destination classroom not found
+        422:
+          description: Validation error or classroom does not belong to destination school
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Destination classroom does not belong to the destination school
+        500:
+          description: Transfer failed — student update or history record write error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Transfer failed while recording history: ..."
   /api/v1/classrooms/create:
     post:
       tags: [Classrooms]
