@@ -1,3 +1,4 @@
+import { NotFoundError } from "../../errors/AppError.js";
 import School from "./School.model.js";
 
 export default class SchoolManager {
@@ -43,7 +44,7 @@ export default class SchoolManager {
     const school = await School.findById(schoolId);
 
     if (!school) {
-      return { success: false, code: 404, message: "School not found" };
+      throw new NotFoundError("School");
     }
 
     return { success: true, code: 200, data: school };
@@ -59,7 +60,7 @@ export default class SchoolManager {
     );
 
     if (!school) {
-      return { success: false, code: 404, message: "School not found" };
+      throw new NotFoundError("School");
     }
 
     return {
@@ -91,7 +92,7 @@ export default class SchoolManager {
     const school = await School.findByIdAndDelete(schoolId);
 
     if (!school) {
-      return { success: false, code: 404, message: "School not found" };
+      if (!school) throw new NotFoundError("School");
     }
 
     return {

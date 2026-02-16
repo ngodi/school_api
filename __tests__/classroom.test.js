@@ -1,7 +1,7 @@
 import request from "supertest";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { app, server } from "../index.js"; // ← export server from index.js
+import { app, server } from "../index.js";
 import User from "../managers/users/User.model.js";
 import School from "../managers/schools/School.model.js";
 

@@ -4,7 +4,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "seed:superadmin": "node scripts/seedSuperadmin.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --runInBand",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
