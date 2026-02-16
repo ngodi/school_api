@@ -27,4 +27,8 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm run test
+        run: npm run test -- --verbose
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          REDIS_URL: redis://localhost:6379
