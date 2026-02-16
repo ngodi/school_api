@@ -16,6 +16,7 @@ export default class ManagersLoader {
     // Register managers
     this.managers.school = new SchoolManager();
     this.managers.user = UserManager;
+    this.managers.classroom = (await import("../managers/school/Classroom.manager.js")).default;
     // Add more managers as needed
     // ...
     // API handler

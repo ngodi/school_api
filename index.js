@@ -1,5 +1,116 @@
 /**
  * @openapi
+ * /api/v1/admin/classrooms:
+ *   post:
+ *     tags:
+ *       - Admin
+ *       - Classrooms
+ *     summary: Create a classroom (schooladmin or superadmin)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Classroom created
+ *       400:
+ *         description: Validation error
+ *       403:
+ *         description: Forbidden
+ *
+ * /api/v1/admin/classrooms/{id}:
+ *   get:
+ *     tags:
+ *       - Admin
+ *       - Classrooms
+ *     summary: Get classroom by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Classroom details
+ *       404:
+ *         description: Not found
+ *   put:
+ *     tags:
+ *       - Admin
+ *       - Classrooms
+ *     summary: Update classroom by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Classroom updated
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Not found
+ *   delete:
+ *     tags:
+ *       - Admin
+ *       - Classrooms
+ *     summary: Delete classroom by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Classroom deleted
+ *       404:
+ *         description: Not found
+ *
+ * /api/v1/admin/classrooms:
+ *   get:
+ *     tags:
+ *       - Admin
+ *       - Classrooms
+ *     summary: List classrooms (optionally by school)
+ *     parameters:
+ *       - in: query
+ *         name: schoolId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of classrooms
+ */
+/**
+ * @openapi
  * /api/v1/admin/users:
  *   post:
  *     tags:
@@ -86,6 +197,53 @@ app.use(express.urlencoded({ extended: true }));
 const port = process.env.PORT || 8100;
 
 async function bootstrap() {
+  // Classroom CRUD endpoints
+  app.post("/api/v1/admin/classrooms", (req, res) =>
+    managers.api.mw(
+      { ...req, params: { moduleName: "classroom", fnName: "create" } },
+      res,
+    ),
+  );
+  app.get("/api/v1/admin/classrooms/:id", (req, res) =>
+    managers.api.mw(
+      {
+        ...req,
+        params: { moduleName: "classroom", fnName: "get" },
+        body: { ...req.body, id: req.params.id },
+      },
+      res,
+    ),
+  );
+  app.put("/api/v1/admin/classrooms/:id", (req, res) =>
+    managers.api.mw(
+      {
+        ...req,
+        params: { moduleName: "classroom", fnName: "update" },
+        body: { ...req.body, id: req.params.id },
+      },
+      res,
+    ),
+  );
+  app.delete("/api/v1/admin/classrooms/:id", (req, res) =>
+    managers.api.mw(
+      {
+        ...req,
+        params: { moduleName: "classroom", fnName: "remove" },
+        body: { ...req.body, id: req.params.id },
+      },
+      res,
+    ),
+  );
+  app.get("/api/v1/admin/classrooms", (req, res) =>
+    managers.api.mw(
+      {
+        ...req,
+        params: { moduleName: "classroom", fnName: "list" },
+        body: { ...req.body, schoolId: req.query.schoolId },
+      },
+      res,
+    ),
+  );
   const mwsLoader = new MiddlewaresLoader();
   const mwsRepo = await mwsLoader.load();
   const managersLoader = new ManagersLoader({ mwsRepo });

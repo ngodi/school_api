@@ -28,7 +28,7 @@ export default class ApiHandler {
         this.methodMatrix[mk] = this.methodMatrix[mk] || {};
         manager[this.prop].forEach((fnName) => {
           let method = "post";
-          // Map RESTful function names to HTTP methods
+          // Maps RESTful function names to HTTP methods
           if (fnName === "list") method = "get";
           if (fnName === "get") method = "get";
           if (fnName === "create") method = "post";
@@ -83,12 +83,10 @@ export default class ApiHandler {
         .json({ ok: false, message: `Unsupported method ${method}` });
     }
     if (!moduleMatrix[method].includes(fnName)) {
-      return res
-        .status(404)
-        .json({
-          ok: false,
-          message: `Function ${fnName} not found in module ${moduleName}`,
-        });
+      return res.status(404).json({
+        ok: false,
+        message: `Function ${fnName} not found in module ${moduleName}`,
+      });
     }
     const mwStack = this.mwsStack[`${moduleName}.${fnName}`] || [];
     let data = { ...req.body };

@@ -19,7 +19,7 @@ describe("User Endpoints", () => {
       );
     }
     await User.deleteMany({});
-    // Create superadmin user directly in DB
+    // Creates superadmin user directly in DB
     const superadmin = new User({
       email: superadminEmail,
       passwordHash: await (await import("bcrypt")).default.hash(password, 10),
@@ -42,7 +42,7 @@ describe("User Endpoints", () => {
       email: schooladminEmail,
       password,
       role: "school_admin",
-      schoolId: "dummySchoolId", // adjust as needed for your logic
+      schoolId: "dummySchoolId",
       token: superadminToken,
     });
     expect(res.body.ok).toBe(true);
