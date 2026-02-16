@@ -8,9 +8,9 @@ export default class SchoolManager {
     this.redis = redis;
 
     this.httpExposed = [
-      "create|__auth|__rbac_superadmin",
+      "create|__auth|__rbac_superadmin|__validateCreateSchool",
       "list|__auth|__rbac_superadmin",
-      "update|__auth|__rbac_superadmin",
+      "update|__auth|__rbac_superadmin|__validateUpdateSchool",
       "get|__auth",
       "remove|__auth|__rbac_superadmin",
     ];

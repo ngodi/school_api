@@ -1,10 +1,11 @@
 // test/setup.js
 import mongoose from "mongoose";
+import config from "../config";
 
 beforeAll(async () => {
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect(
-      process.env.MONGO_TEST_URI ||
+      config.MONGO_TEST_URI ||
         "mongodb://localhost:27017/school_management_test",
     );
   }

@@ -8,9 +8,9 @@ class StudentManager {
     this.redis = redis;
 
     this.httpExposed = [
-      "create|__auth|__rbac_schooladmin",
+      "create|__auth|__rbac_schooladmin|__validateCreateStudent",
       "list|__auth|__rbac_schooladmin",
-      "update|__auth|__rbac_schooladmin",
+      "update|__auth|__rbac_schooladmin|__validateUpdateStudent",
       "get|__auth",
       "remove|__auth|__rbac_schooladmin",
     ];
@@ -46,13 +46,13 @@ class StudentManager {
     return { success: true, data: student };
   }
 
-  async get({ id }) {
-    const student = await Student.findById(id);
+  async get({ studentId }) {
+    const student = await Student.findById(studentId);
     if (!student) return { success: false, message: "Student not found" };
     return { success: true, data: student };
   }
 
-  async update({ id, ...updates }) {
+  async update({ studentId, ...updates }) {
     if (updates.email || updates.admissionNumber) {
       const exists = await Student.findOne({
         $or: [
@@ -61,7 +61,7 @@ class StudentManager {
             ? { admissionNumber: updates.admissionNumber }
             : {},
         ],
-        _id: { $ne: id },
+        _id: { $ne: studentId },
       });
       if (exists)
         return {
@@ -74,8 +74,8 @@ class StudentManager {
     return { success: true, data: student };
   }
 
-  async remove({ id }) {
-    const student = await Student.findByIdAndDelete(id);
+  async remove({ studentId }) {
+    const student = await Student.findByIdAndDelete(studentId);
     if (!student) return { success: false, message: "Student not found" };
     return { success: true, data: student };
   }

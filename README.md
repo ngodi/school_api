@@ -75,6 +75,8 @@ Each student:
 {
   "_id": "ObjectId",
   "email": "String",
+  "firstName": "string",
+  "lastName": "string",
   "passwordHash": "String",
   "role": "superadmin | school_admin",
   "schoolId": "ObjectId | null",
@@ -132,7 +134,7 @@ Each student:
 ```json
 {
   "sub": "userId",
-  "role": "school_admin",
+  "role": "schooladmin",
   "schoolId": "abc123"
 }
 ```
@@ -240,11 +242,16 @@ npm install
 Create a .env file:
 
 - PORT=5000
+- NODE_ENV=development
 - MONGO_URI=mongodb://localhost:27017/school_management_api
 - JWT_SECRET=your_jwt_secret_key
 - JWT_EXPIRES_IN=1d
-- SUPERADMIN_EMAIL=admin@example.com
-- SUPERADMIN_PASSWORD=adminpassword
+- SUPERADMIN_EMAIL=your super admin email
+- SUPERADMIN_PASSWORD= your admin password
+- SUPERADMIN_FIRST_NAME=Super
+- SUPERADMIN_LAST_NAME=Admin
+- CLIENT_URL=http://localhost:3000
+- ALLOWED_ORIGINS=http://localhost:3000
 
 ## Start MongoDB
 
@@ -254,7 +261,7 @@ sudo systemctl start mongod
 
 ## Run Application
 
-npm run dev
+npm run start
 
 ## Seed super Admin
 

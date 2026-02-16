@@ -12,9 +12,9 @@ export default class UserManager {
     this.httpExposed = [
       "login",
       "logout|__auth",
-      "create|__auth|__rbac_superadmin",
+      "create|__auth|__rbac_superadmin|__validateCreateUser",
       "list|__auth|__rbac_superadmin",
-      "update|__auth|__rbac_superadmin",
+      "update|__auth|__rbac_superadmin|__validateUpdateUser",
       "get|__auth",
       "remove|__auth|__rbac_superadmin",
     ];
@@ -55,12 +55,12 @@ export default class UserManager {
   async get(data) {
     if (
       data.user.role === "schooladmin" &&
-      data.user.id.toString() !== data.id
+      data.user.id.toString() !== data.userId
     ) {
       return { success: false, message: "Not authorized to access this user" };
     }
 
-    const user = await User.findById(data.id).populate(
+    const user = await User.findById(data.userId).populate(
       "schoolId",
       "name address contactEmail phone",
     );
@@ -77,10 +77,10 @@ export default class UserManager {
   /**
    * Update user by ID
    */
-  async update({ id, ...updates }) {
+  async update({ userId, ...updates }) {
     const editableFields = ["firstName", "lastName", "phone"];
 
-    const user = await User.findById(id);
+    const user = await User.findById(userId);
     if (!user) {
       return { success: false, message: "User not found" };
     }
@@ -100,8 +100,8 @@ export default class UserManager {
   /**
    * Delete user by ID
    */
-  async remove({ id }) {
-    const user = await User.findByIdAndDelete(id);
+  async remove({ userId }) {
+    const user = await User.findByIdAndDelete(userId);
     if (!user) {
       return { success: false, message: "User not found" };
     }

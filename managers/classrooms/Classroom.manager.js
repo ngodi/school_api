@@ -8,9 +8,9 @@ class ClassroomManager {
     this.redis = redis;
 
     this.httpExposed = [
-      "create|__auth|__rbac_schooladmin",
+      "create|__auth|__rbac_schooladmin|__validateCreateClassroom",
       "list|__auth|__rbac_schooladmin",
-      "update|__auth|__rbac_schooladmin",
+      "update|__auth|__rbac_schooladmin|__validateUpdateClassroom",
       "get|__auth",
       "remove|__auth|__rbac_schooladmin",
     ];
@@ -39,18 +39,18 @@ class ClassroomManager {
     return { success: true, data: classroom, code: 201 };
   }
 
-  async get({ id }) {
-    const classroom = await Classroom.findById(id);
+  async get({ classroomId }) {
+    const classroom = await Classroom.findById(classroomId);
     if (!classroom)
       return { success: false, message: "Classroom not found", code: 404 };
     return { success: true, data: classroom, code: 200 };
   }
 
-  async update({ id, ...updates }) {
+  async update({ classroomId, ...updates }) {
     if (updates.code) {
       const exists = await Classroom.findOne({
         code: updates.code,
-        _id: { $ne: id },
+        _id: { $ne: classroomId },
       });
       if (exists)
         return {
@@ -67,8 +67,8 @@ class ClassroomManager {
     return { success: true, data: classroom, code: 200 };
   }
 
-  async remove({ id }) {
-    const classroom = await Classroom.findByIdAndDelete(id);
+  async remove({ classroomId }) {
+    const classroom = await Classroom.findByIdAndDelete(classroomId);
 
     if (!classroom)
       return { success: false, message: "Classroom not found", code: 404 };
