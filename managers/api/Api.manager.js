@@ -1,4 +1,4 @@
-import { errorHandler } from "../../errors/errorHandler";
+import { errorHandler } from "../../errors/errorHandler.js";
 
 export default class ApiHandler {
   constructor({ config, mwsRepo, managers, prop }) {
