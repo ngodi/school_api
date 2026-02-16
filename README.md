@@ -289,4 +289,4 @@ npm run seed:superadmin
 - Soft deletes (deletedAt)
 - Audit logging
 - Redis caching layer
-- Per resource/request rate-limiter
+- Per resource/route rate-limiter

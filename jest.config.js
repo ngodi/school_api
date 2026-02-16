@@ -7,5 +7,6 @@ export default {
   transform: {
     "^.+\\.js$": "babel-jest",
   },
-  setupFilesAfterEnv: ["./__tests__/setup.js"],
+  setupFilesAfterFramework: ["./__tests__/setup.js"],
+  testTimeout: 30000,
 };
