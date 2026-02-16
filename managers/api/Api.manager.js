@@ -67,12 +67,7 @@ export default class ApiHandler {
     try {
       return await targetModule[fnName](data);
     } catch (err) {
-      console.error(`[ApiHandler] Error in ${fnName}:`, err);
-      return {
-        success: false,
-        message: `${fnName} failed: ${err.message}`,
-        code: 500,
-      };
+      return errorHandler(err);
     }
   }
 
