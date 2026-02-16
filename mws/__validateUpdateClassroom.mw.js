@@ -19,7 +19,7 @@ const schema = z
   });
 
 export default function __validateUpdateClassroom() {
-  return async function __validateUpdateClassroom(data) {
+  return function __validateUpdateClassroom(data) {
     if (!data.classroomId) {
       return { success: false, code: 422, message: "Classroom id is required" };
     }

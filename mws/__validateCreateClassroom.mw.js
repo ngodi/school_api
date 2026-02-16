@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 export default function __validateCreateClassroom() {
-  return async function __validateCreateClassroom(data) {
+  return function __validateCreateClassroom(data) {
     // Coerce capacity to number if it arrived as a query/body string
     const coerced = {
       ...data,

@@ -1,5 +1,5 @@
 export default function rbacMiddleware(requiredRoles) {
-  return async function __rbac(data) {
+  return function __rbac(data) {
     const user = data.user;
     if (!user) {
       return { success: false, message: "User not authenticated", code: 401 };

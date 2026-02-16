@@ -11,7 +11,7 @@ class ResponseDispatcher {
       message:
         message || (success ? "Operation successful" : "Operation failed"),
       ...(outputError ? { errors: outputError } : {}),
-      ...(success && data ? { data: data } : {}),
+      ...(success && data ? { data } : {}),
     });
   }
 }

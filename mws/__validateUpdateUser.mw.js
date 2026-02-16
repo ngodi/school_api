@@ -33,7 +33,7 @@ const schema = z
   });
 
 export default function __validateUpdateUser() {
-  return async function __validateUpdateUser(data) {
+  return function __validateUpdateUser(data) {
     if (!data.userId) {
       return { success: false, code: 422, message: "User id is required" };
     }

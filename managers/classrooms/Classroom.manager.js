@@ -59,9 +59,11 @@ class ClassroomManager {
           code: 400,
         };
     }
-    const classroom = await Classroom.findByIdAndUpdate(id, updates, {
+
+    const classroom = await Classroom.findByIdAndUpdate(classroomId, updates, {
       new: true,
     });
+
     if (!classroom)
       return { success: false, message: "Classroom not found", code: 404 };
     return { success: true, data: classroom, code: 200 };
@@ -76,7 +78,8 @@ class ClassroomManager {
   }
 
   async list(data) {
-    let { schoolId, page = 1, limit = 10 } = data;
+    const { schoolId } = data;
+    let { page = 1, limit = 10 } = data;
     const query = schoolId ? { schoolId } : {};
 
     page = Math.max(1, parseInt(page));

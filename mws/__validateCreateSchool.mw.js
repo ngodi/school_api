@@ -8,7 +8,7 @@ const schema = z.object({
 });
 
 export default function __validateCreateSchool() {
-  return async function __validateCreateSchool(data) {
+  return function __validateCreateSchool(data) {
     const result = schema.safeParse(data);
     if (!result.success) {
       return {

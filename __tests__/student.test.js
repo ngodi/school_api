@@ -5,8 +5,7 @@ import User from "../managers/users/User.model.js";
 
 describe("Student Endpoints", () => {
   let superadminToken;
-  let superadminId;
-  let schoolId = new mongoose.Types.ObjectId();
+  const schoolId = new mongoose.Types.ObjectId();
   let classroomId;
   const password = "Password123!";
   const studentEmail = "student1@example.com";
@@ -30,7 +29,6 @@ describe("Student Endpoints", () => {
       .post("/api/v1/users/login")
       .send({ email: "superadmin@student.com", password });
 
-    superadminId = res.body.data._id;
     superadminToken = res.body.data.token;
     // Create classroom
     const classroomRes = await request(app)

@@ -21,7 +21,7 @@ const schema = z
   });
 
 export default function __validateUpdateStudent() {
-  return async function __validateUpdateStudent(data) {
+  return function __validateUpdateStudent(data) {
     if (!data.studentId) {
       return { success: false, code: 422, message: "Student id is required" };
     }
