@@ -8,5 +8,5 @@ export default {
     "^.+\\.js$": "babel-jest",
   },
   setupFilesAfterEnv: ["<rootDir>/__tests__/setup.js"],
-  testTimeout: 30000,
+  testTimeout: 3000,
 };
